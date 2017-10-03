@@ -4,6 +4,7 @@ import com.sky.security.service.ShopDataService;
 import com.sky.security.service.vo.ShopData;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.access.prepost.PreFilter;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
@@ -86,6 +87,12 @@ public class ShopDataServiceImpl implements ShopDataService {
         }
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_USER','ROLE_ADMIN')")
+    @PreFilter("hasRole('ROLE_ADMIN') || filterObject.shopdata.username == principal.username")
+    public void deletexx(List<ShopData> list) {
+        //省略代码
+    }
+
     /**
      * 修改逻辑，如果是上线状态，修改为下线，反之亦然
      * 普通管理员只能修改自己的店铺
@@ -107,7 +114,7 @@ public class ShopDataServiceImpl implements ShopDataService {
     }
 
     /**
-     * 普通管理员 自动获取自己的店铺列表
+     * 普通管理员 只能获取自己的店铺列表
      * @param username
      * @return
      */
