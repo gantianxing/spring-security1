@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:security="http://www.springframework.org/schema/security"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/security
+       http://www.springframework.org/schema/security/spring-security.xsd"
+        default-autowire="byName">
+
+    <!--<security:global-method-security jsr250-annotations="enabled"/>-->
+    <security:global-method-security secured-annotations="enabled" pre-post-annotations="enabled">
+        <security:expression-handler ref="expressionHandler"/>
+    </security:global-method-security>
+
+
+    <security:http auto-config="true">
+        <!--静态资源和登陆页面不做限制-->
+        <security:intercept-url pattern="/css/**" access="permitAll" />
+        <security:intercept-url pattern="/login**" access="permitAll" />
+
+        <!--只能ADMIN角色访问-->
+        <security:intercept-url pattern="/admin**" access="hasRole('ROLE_ADMIN')" />
+
+        <!--通过验证的用户都可以到达这个页面,注意isAuthenticated()带括号-->
+        <security:intercept-url pattern="/welcome**" access="isAuthenticated()" />
+        <security:intercept-url pattern="/shop**" access="isAuthenticated()" />
+
+        <!--其他页面USER角色都可以访问-->
+        <security:intercept-url pattern="/**" access="hasRole('ROLE_USER')" />
+        <security:form-login
+                    login-page='/login'
+                    default-target-url="/welcome"
+                    authentication-failure-url="/login?error"
+                    username-parameter="username"
+                    password-parameter="password"/>
+
+        <!--没有权限错误页面-->
+        <security:access-denied-handler error-page="/nopermit"/>
+
+        <security:logout
+                logout-success-url="/login?logout"/>
+        <security:csrf />
+    </security:http>
+
+    <!-- 基于数据库的用户认证 -->
+    <security:authentication-manager>
+        <security:authentication-provider user-service-ref='myUserDetailsService'/>
+    </security:authentication-manager>
+
+    <!-- 这里使用的默认实现，也可以自己定义 -->
+    <bean id="myUserDetailsService"
+                class="org.springframework.security.core.userdetails.jdbc.JdbcDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean id="expressionHandler"
+          class="org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler">
+        <property name="permissionEvaluator" ref="myPermissionEvaluator" />
+    </bean>
+    <!-- 自定义的PermissionEvaluator实现 -->
+    <!--<bean id="myPermissionEvaluator" class="com.sky.security.service.MyPermissionEvaluator"/>-->
+
+</beans>
